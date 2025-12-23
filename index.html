@@ -20,7 +20,7 @@
 
         @page {
             size: A4;
-            margin: 0;
+            margin: 10mm;
         }
 
         body {
@@ -63,6 +63,13 @@
             background-color: var(--point-pink);
             transform: translateY(-2px);
         }
+
+        .btn-yellow { background-color: #F6E05E; }
+        .btn-yellow:hover { background-color: #ECC94B; }
+        .btn-green { background-color: #A8D5BA; }
+        .btn-green:hover { background-color: #8BC9A3; }
+        .btn-gray { background-color: #B5C7D3; }
+        .btn-gray:hover { background-color: #9BB3C3; }
 
         /* A4 용지 컨테이너 */
         .page {
@@ -293,9 +300,9 @@
         }
 
         @media print {
-            body { background: none; padding: 0; }
+            body { background: none; padding: 0; margin: 0; }
             .control-panel { display: none; }
-            .page { width: 100%; margin: 0; padding: 0; box-shadow: none; border-radius: 0; }
+            .page { width: 100%; margin: 0; padding: 5mm 10mm; box-shadow: none; border-radius: 0; }
             .meta-input { border-bottom: 1px solid #000; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
@@ -308,11 +315,14 @@
         <button class="btn" onclick="window.print()">
             <span>🖨️</span> 인쇄하기
         </button>
-        <button class="btn" style="background-color: #A8D5BA;" onclick="copyFromPrevious()">
+        <button class="btn btn-yellow" onclick="loadDefaultValues()">
+            <span>📦</span> 기본값 가져오기
+        </button>
+        <button class="btn btn-green" onclick="copyFromPrevious()">
             <span>📋</span> 이전 데이터 복사
         </button>
-        <button class="btn" style="background-color: #B5C7D3;" onclick="clearData()">
-            <span>🔄</span> 초기화
+        <button class="btn btn-gray" onclick="clearData()">
+            <span>🗑️</span> 모두 지우기
         </button>
     </div>
 
@@ -330,7 +340,7 @@
                     점검일자 : <input type="text" class="meta-input" id="dateInput" placeholder="YYYY-MM-DD">
                 </div>
                 <div class="meta-row">
-                    점검자 : <input type="text" class="meta-input" value="최지원" placeholder="이름 입력">
+                    점검자 : <input type="text" class="meta-input" id="inspectorInput" value="최지원" placeholder="이름 입력">
                 </div>
             </div>
         </header>
@@ -534,6 +544,78 @@
     </div> <!-- Page End -->
 
     <script>
+        // 기본값 상수 정의
+        const DEFAULT_VALUES = {
+            'table-handfiles': {
+                '0:#06': ['1', '1', '0', '-', '-'],
+                '1:#08': ['5', '4', '1', '1', '1'],
+                '2:#10': ['1', '10', '1', '0', '1'],
+                '3:#15': ['4', '5', '1', '0', '4'],
+                '4:#20': ['2', '4', '2', '1', '1'],
+                '5:#25': ['1', '2', '2', '1', '3'],
+                '6:#30': ['3', '3', '2', '1', '1'],
+                '7:#35': ['2', '3', '2', '1', '4'],
+                '8:#40': ['2', '2', '2', '1', '1'],
+                '9:#45': ['2', '0', '0', '1', '1'],
+                '10:#50': ['0', '0', '0', '1', '1'],
+                '11:#55': ['-', '-', '-', '1', '1'],
+                '12:#60': ['-', '-', '-', '1', '0'],
+                '13:#45~80': ['1', '0', '1', '-', '-'],
+                '14:#15~40': ['0', '0', '1', '-', '-']
+            },
+            'table-paperpoints': {
+                '0:#15': ['1', '0', '1'],
+                '1:#20': ['1', '0', '1'],
+                '2:#25': ['3', '2', '1'],
+                '3:#30': ['2', '2', '3'],
+                '4:#35': ['2', '', '4'],
+                '5:#40': ['5', '', '1'],
+                '6:#45': ['1', '', '-'],
+                '7:#50': ['1/6', '', '-'],
+                '8:#55': ['3/6', '', '-'],
+                '9:#60': ['3/6', '', '-'],
+                '10:#70': ['3/6', '', '-'],
+                '11:#80': ['3/6', '', '-']
+            },
+            'table-etc': {
+                '0:Calcipex': [''],
+                '1:RC Prep': [''],
+                '2:Sealer (AH26)': [''],
+                '3:Vitapex': [''],
+                '4:GP Solvent': [''],
+                '5:E-temp': [''],
+                '6:': ['', ''],
+                '7:': ['', ''],
+                '8:': ['', ''],
+                '9:': ['', '']
+            },
+            'table-waveone': {
+                '0:Small (#20)': ['4'],
+                '1:Primary (#25)': ['3'],
+                '2:Medium (#35)': ['2'],
+                '3:Large (#25)': ['3']
+            },
+            'table-protaper': {
+                '0:S1 (Purple)': ['1'],
+                '1:S2 (Yellow)': ['2'],
+                '2:S1/F1 (Wht)': ['3'],
+                '3:S1': ['2'],
+                '4:S2': ['1'],
+                '5:F1': ['2'],
+                '6:F2': ['0'],
+                '7:F5': ['2'],
+                '8:S1': ['1']
+            },
+            'table-accessorygp': {
+                '0:Fine Small (FS)': ['1'],
+                '1:Small (S)': ['3'],
+                '2:Fine Medium (FM)': ['3'],
+                '3:Fine Large (FL)': ['2']
+            }
+        };
+
+        const DEFAULT_MEMO = '<span class="memo-title" contenteditable="false">📝 Order Note / 비고</span><br>';
+
         document.addEventListener('DOMContentLoaded', () => {
             const dateInput = document.getElementById('dateInput');
             const today = new Date();
@@ -570,6 +652,11 @@
             document.querySelector('.memo-box').addEventListener('input', () => {
                 saveData();
             });
+
+            // 점검자 이름도 자동저장
+            document.getElementById('inspectorInput').addEventListener('input', () => {
+                saveData();
+            });
         });
 
         // 날짜 형식 유효성 검사 (YYYY-MM-DD)
@@ -596,7 +683,8 @@
 
             const data = {
                 tables: {},
-                memo: document.querySelector('.memo-box').innerHTML
+                memo: document.querySelector('.memo-box').innerHTML,
+                inspector: document.getElementById('inspectorInput').value
             };
 
             // 각 테이블별로 데이터 저장
@@ -630,7 +718,7 @@
             localStorage.setItem(dateKey, JSON.stringify(data));
         }
 
-        // 화면 초기화 (HTML 기본값으로)
+        // 화면 초기화 (빈 값으로)
         function resetToDefault() {
             document.querySelectorAll('td.editable').forEach(td => {
                 if (!td.classList.contains('label-col') && !td.hasAttribute('placeholder')) {
@@ -642,7 +730,52 @@
                 }
             });
             const memoBox = document.querySelector('.memo-box');
-            memoBox.innerHTML = '<span class="memo-title" contenteditable="false">📝 Order Note / 비고</span><br>';
+            memoBox.innerHTML = DEFAULT_MEMO;
+        }
+
+        // 공통: 테이블 데이터 적용
+        function applyTableData(data) {
+            if (!data.tables) return;
+
+            TABLE_IDS.forEach(tableId => {
+                const table = document.getElementById(tableId);
+                if (!table || !data.tables[tableId]) return;
+
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach((row, rowIndex) => {
+                    const labelCell = row.querySelector('.label-col') || row.cells[0];
+                    const labelText = labelCell ? labelCell.innerText.trim() : '';
+                    const rowKey = `${rowIndex}:${labelText}`;
+
+                    // 정확한 키로 찾거나, rowIndex로 시작하는 키 찾기 (사용자 정의 품명 호환)
+                    let savedValues = data.tables[tableId][rowKey];
+                    if (!savedValues) {
+                        const matchingKey = Object.keys(data.tables[tableId]).find(k => k.startsWith(`${rowIndex}:`));
+                        if (matchingKey) {
+                            savedValues = data.tables[tableId][matchingKey];
+                        }
+                    }
+
+                    if (savedValues) {
+                        const editableCells = row.querySelectorAll('.editable');
+                        editableCells.forEach((cell, cellIndex) => {
+                            if (savedValues[cellIndex] !== undefined) {
+                                cell.innerText = savedValues[cellIndex];
+                            }
+                        });
+                    }
+                });
+            });
+
+            // 메모 복원
+            if (data.memo) {
+                document.querySelector('.memo-box').innerHTML = data.memo;
+            }
+
+            // 점검자 복원
+            if (data.inspector) {
+                document.getElementById('inspectorInput').value = data.inspector;
+            }
         }
 
         // 현재 날짜 키로 데이터 불러오기
@@ -652,51 +785,14 @@
 
             const savedData = localStorage.getItem(dateKey);
             if (!savedData) {
-                // 저장된 데이터가 없으면 화면 초기화
-                resetToDefault();
+                // 저장된 데이터가 없으면 기본값으로 초기화
+                loadDefaultValues(false);
                 return;
             }
 
             try {
                 const data = JSON.parse(savedData);
-
-                // 각 테이블별로 데이터 복원
-                if (data.tables) {
-                    TABLE_IDS.forEach(tableId => {
-                        const table = document.getElementById(tableId);
-                        if (!table || !data.tables[tableId]) return;
-
-                        const rows = table.querySelectorAll('tbody tr');
-                        rows.forEach((row, rowIndex) => {
-                            const labelCell = row.querySelector('.label-col') || row.cells[0];
-                            const labelText = labelCell ? labelCell.innerText.trim() : '';
-                            const rowKey = `${rowIndex}:${labelText}`;
-
-                            // 정확한 키로 찾거나, rowIndex로 시작하는 키 찾기 (사용자 정의 품명 호환)
-                            let savedValues = data.tables[tableId][rowKey];
-                            if (!savedValues) {
-                                const matchingKey = Object.keys(data.tables[tableId]).find(k => k.startsWith(`${rowIndex}:`));
-                                if (matchingKey) {
-                                    savedValues = data.tables[tableId][matchingKey];
-                                }
-                            }
-
-                            if (savedValues) {
-                                const editableCells = row.querySelectorAll('.editable');
-                                editableCells.forEach((cell, cellIndex) => {
-                                    if (savedValues[cellIndex] !== undefined) {
-                                        cell.innerText = savedValues[cellIndex];
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
-
-                // 메모 복원
-                if (data.memo) {
-                    document.querySelector('.memo-box').innerHTML = data.memo;
-                }
+                applyTableData(data);
             } catch (e) {
                 console.error('데이터 로드 오류:', e);
                 // 손상된 데이터 삭제 후 초기화
@@ -706,7 +802,7 @@
         }
 
         function clearData() {
-            if(confirm('모든 데이터를 초기화하시겠습니까? (🌸)')) {
+            if(confirm('모든 데이터를 지우시겠습니까?')) {
                 resetToDefault();
 
                 // 현재 날짜의 로컬스토리지 데이터 삭제
@@ -714,6 +810,46 @@
                 if (dateKey && isValidDate(dateKey)) {
                     localStorage.removeItem(dateKey);
                 }
+            }
+        }
+
+        // 기본값 불러오기 (showConfirm: 확인창 표시 여부)
+        function loadDefaultValues(showConfirm = true) {
+            if(showConfirm && !confirm('기본값을 불러오시겠습니까? 현재 데이터는 덮어씌워집니다.')) {
+                return;
+            }
+
+            // 각 테이블별로 기본값 적용
+            TABLE_IDS.forEach(tableId => {
+                const table = document.getElementById(tableId);
+                if (!table || !DEFAULT_VALUES[tableId]) return;
+
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach((row, rowIndex) => {
+                    const labelCell = row.querySelector('.label-col') || row.cells[0];
+                    const labelText = labelCell ? labelCell.innerText.trim() : '';
+                    const rowKey = `${rowIndex}:${labelText}`;
+
+                    const defaultValues = DEFAULT_VALUES[tableId][rowKey];
+                    if (defaultValues) {
+                        const editableCells = row.querySelectorAll('.editable');
+                        editableCells.forEach((cell, cellIndex) => {
+                            if (defaultValues[cellIndex] !== undefined) {
+                                cell.innerText = defaultValues[cellIndex];
+                            }
+                        });
+                    }
+                });
+            });
+
+            // 메모 초기화
+            document.querySelector('.memo-box').innerHTML = DEFAULT_MEMO;
+
+            // 현재 날짜로 저장
+            saveData();
+
+            if (showConfirm) {
+                alert('기본값을 불러왔습니다!');
             }
         }
 
@@ -751,44 +887,7 @@
                 if (savedData) {
                     try {
                         const data = JSON.parse(savedData);
-
-                        // 각 테이블별로 데이터 복원
-                        if (data.tables) {
-                            TABLE_IDS.forEach(tableId => {
-                                const table = document.getElementById(tableId);
-                                if (!table || !data.tables[tableId]) return;
-
-                                const rows = table.querySelectorAll('tbody tr');
-                                rows.forEach((row, rowIndex) => {
-                                    const labelCell = row.querySelector('.label-col') || row.cells[0];
-                                    const labelText = labelCell ? labelCell.innerText.trim() : '';
-                                    const rowKey = `${rowIndex}:${labelText}`;
-
-                                    // 정확한 키로 찾거나, rowIndex로 시작하는 키 찾기
-                                    let savedValues = data.tables[tableId][rowKey];
-                                    if (!savedValues) {
-                                        const matchingKey = Object.keys(data.tables[tableId]).find(k => k.startsWith(`${rowIndex}:`));
-                                        if (matchingKey) {
-                                            savedValues = data.tables[tableId][matchingKey];
-                                        }
-                                    }
-
-                                    if (savedValues) {
-                                        const editableCells = row.querySelectorAll('.editable');
-                                        editableCells.forEach((cell, cellIndex) => {
-                                            if (savedValues[cellIndex] !== undefined) {
-                                                cell.innerText = savedValues[cellIndex];
-                                            }
-                                        });
-                                    }
-                                });
-                            });
-                        }
-
-                        // 메모 복원
-                        if (data.memo) {
-                            document.querySelector('.memo-box').innerHTML = data.memo;
-                        }
+                        applyTableData(data);
 
                         // 현재 날짜로 저장
                         saveData();
