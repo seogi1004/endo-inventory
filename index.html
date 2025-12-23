@@ -538,17 +538,13 @@
         });
 
         function clearData() {
-            if(confirm('모든 입력 내용을 초기화하시겠습니까? (🌸)')) {
+            if(confirm('모든 숫자 데이터를 초기화하시겠습니까? (🌸)')) {
                 document.querySelectorAll('td.editable').forEach(td => {
-                    if (td.hasAttribute('placeholder')) {
-                         td.innerText = '';
-                    } else if (td.classList.contains('stock-cnt') || td.classList.contains('low-stock') || td.classList.contains('excess-stock')) {
-                         // 숫자 데이터 보존
+                    // label-col 클래스가 없고, placeholder 속성이 없는 셀만 초기화 (숫자 데이터 셀)
+                    if (!td.classList.contains('label-col') && !td.hasAttribute('placeholder')) {
+                        td.innerText = '';
                     }
                 });
-                
-                const memoBox = document.querySelector('.memo-box');
-                memoBox.innerHTML = '<span class="memo-title" contenteditable="false">📝 Order Note / 비고</span><br>';
             }
         }
     </script>
