@@ -120,6 +120,13 @@
             outline: none;
             background: transparent;
             color: var(--text-color);
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .meta-input.invalid {
+            border-bottom: 2px solid #e53e3e;
+            background-color: #FFF5F5;
+            color: #e53e3e;
         }
 
         /* 그리드 레이아웃 */
@@ -542,9 +549,14 @@
             // 페이지 로드 시 저장된 데이터 불러오기
             loadData();
 
-            // 날짜 변경 시 해당 날짜의 데이터 로드
-            dateInput.addEventListener('change', () => {
-                loadData();
+            // 날짜 변경 시 유효성 검사 후 데이터 로드
+            dateInput.addEventListener('input', () => {
+                if (isValidDate(dateInput.value)) {
+                    dateInput.classList.remove('invalid');
+                    loadData();
+                } else {
+                    dateInput.classList.add('invalid');
+                }
             });
 
             // 모든 editable 셀에 자동저장 이벤트 추가
@@ -560,6 +572,13 @@
             });
         });
 
+        // 날짜 형식 유효성 검사 (YYYY-MM-DD)
+        function isValidDate(dateString) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return false;
+            const date = new Date(dateString);
+            return date instanceof Date && !isNaN(date);
+        }
+
         // 테이블 ID 목록
         const TABLE_IDS = [
             'table-handfiles',
@@ -573,7 +592,7 @@
         // 현재 날짜 키로 데이터 저장
         function saveData() {
             const dateKey = document.getElementById('dateInput').value;
-            if (!dateKey) return;
+            if (!dateKey || !isValidDate(dateKey)) return;
 
             const data = {
                 tables: {},
@@ -614,7 +633,7 @@
         // 현재 날짜 키로 데이터 불러오기
         function loadData() {
             const dateKey = document.getElementById('dateInput').value;
-            if (!dateKey) return;
+            if (!dateKey || !isValidDate(dateKey)) return;
 
             const savedData = localStorage.getItem(dateKey);
             if (savedData) {
