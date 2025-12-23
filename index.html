@@ -301,6 +301,9 @@
         <button class="btn" onclick="window.print()">
             <span>🖨️</span> 인쇄하기
         </button>
+        <button class="btn" style="background-color: #A8D5BA;" onclick="copyFromPrevious()">
+            <span>📋</span> 이전 데이터 복사
+        </button>
         <button class="btn" style="background-color: #B5C7D3;" onclick="clearData()">
             <span>🔄</span> 초기화
         </button>
@@ -666,6 +669,71 @@
                 const dateKey = document.getElementById('dateInput').value;
                 if (dateKey) {
                     localStorage.removeItem(dateKey);
+                }
+            }
+        }
+
+        // 이전 날짜 데이터 복사
+        function copyFromPrevious() {
+            const currentDate = document.getElementById('dateInput').value;
+
+            // 로컬스토리지에서 저장된 모든 날짜 키 찾기
+            const savedDates = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // YYYY-MM-DD 형식인지 확인
+                if (/^\d{4}-\d{2}-\d{2}$/.test(key) && key !== currentDate) {
+                    savedDates.push(key);
+                }
+            }
+
+            if (savedDates.length === 0) {
+                alert('복사할 수 있는 이전 데이터가 없습니다.');
+                return;
+            }
+
+            // 날짜 내림차순 정렬 (최신순)
+            savedDates.sort((a, b) => b.localeCompare(a));
+            const latestDate = savedDates[0];
+
+            if (confirm(`${latestDate} 데이터를 불러올까요?`)) {
+                const savedData = localStorage.getItem(latestDate);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+
+                    // 각 테이블별로 데이터 복원
+                    if (data.tables) {
+                        TABLE_IDS.forEach(tableId => {
+                            const table = document.getElementById(tableId);
+                            if (!table || !data.tables[tableId]) return;
+
+                            const rows = table.querySelectorAll('tbody tr');
+                            rows.forEach((row, rowIndex) => {
+                                const labelCell = row.querySelector('.label-col') || row.cells[0];
+                                const labelText = labelCell ? labelCell.innerText.trim() : '';
+                                const rowKey = `${rowIndex}:${labelText}`;
+
+                                if (data.tables[tableId][rowKey]) {
+                                    const editableCells = row.querySelectorAll('.editable');
+                                    const savedValues = data.tables[tableId][rowKey];
+                                    editableCells.forEach((cell, cellIndex) => {
+                                        if (savedValues[cellIndex] !== undefined) {
+                                            cell.innerText = savedValues[cellIndex];
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    }
+
+                    // 메모 복원
+                    if (data.memo) {
+                        document.querySelector('.memo-box').innerHTML = data.memo;
+                    }
+
+                    // 현재 날짜로 저장
+                    saveData();
+                    alert('데이터를 복사했습니다! 수정 후 자동 저장됩니다.');
                 }
             }
         }
