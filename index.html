@@ -301,17 +301,19 @@
 
         .doc-footer {
             position: absolute;
-            bottom: 10mm;
-            right: 15mm;
-            font-size: 7pt;
-            color: #ddd;
+            bottom: 8mm;
+            left: 10mm;
+            font-size: 7.5pt;
+            color: #ccc;
+            font-style: italic;
+            letter-spacing: 0.3px;
         }
 
         @media print {
             body { background: none; padding: 0; margin: 0; }
             .control-panel { display: none; }
             .page { width: 100%; margin: 0; padding: 3mm 5mm; box-shadow: none; border-radius: 0; }
-            .meta-input { border-bottom: 1px solid #000; }
+            .meta-input { border-bottom: 1px solid var(--main-pink); }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
             /* 인쇄 시 여백 축소 */
@@ -440,7 +442,7 @@
                     </table>
                 </section>
 
-                 <section>
+                 <section class="print-page-break">
                     <h2>4. Etc</h2>
                     <table id="table-etc">
                         <thead>
@@ -567,7 +569,7 @@
             </div>
 
         </div> <!-- Grid End -->
-        <div class="doc-footer">Created by 최지원</div>
+        <div class="doc-footer">Document designed & managed by Jiwon Choi · Prime39 Dental Clinic</div>
     </div> <!-- Page End -->
 
     <script>
