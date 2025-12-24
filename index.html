@@ -330,8 +330,24 @@
             .bunny-icon { width: 50px; height: 50px; }
             .clinic-name { font-size: 12pt; }
 
-            /* Pro-Taper 섹션부터 2페이지로 */
-            .print-page-break { page-break-before: always; }
+            /* ETC 섹션은 page-break 하지 않음 (1페이지에 포함) */
+            .print-page-break { page-break-before: auto; }
+
+            /* 1페이지에 맞추기 위한 추가 압축 */
+            .page { padding: 2mm 4mm; }
+            header { padding-bottom: 5px; margin-bottom: 10px; }
+            h1 { font-size: 20pt; }
+            h2 { padding: 3px 8px; margin-bottom: 4px; font-size: 11pt; }
+            section { margin-bottom: 10px; }
+            .layout-grid { gap: 10px; }
+            .sub-section-title { margin-top: 8px; font-size: 9pt; }
+            table { font-size: 8pt; }
+            th { padding: 3px 2px; font-size: 8pt; }
+            td { padding: 3px 2px; }
+            .memo-box { min-height: 40px; padding: 5px; margin-top: 6px; font-size: 8pt; }
+            .signature-area { margin-top: 10px; padding: 8px; }
+            .bunny-icon { width: 40px; height: 40px; }
+            .clinic-name { font-size: 10pt; }
         }
     </style>
 </head>
